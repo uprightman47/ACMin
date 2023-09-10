@@ -15,7 +15,7 @@ from sklearn.utils.validation import check_array
 from sklearn.metrics.pairwise import pairwise_kernels
 from sklearn.neighbors import kneighbors_graph
 from sklearn.manifold import spectral_embedding
-from sklearn.cluster.k_means_ import k_means
+# from sklearn.cluster.k_means_ import k_means
 from scipy.linalg import qr
 
 
