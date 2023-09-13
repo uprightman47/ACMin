@@ -34,9 +34,10 @@ from numpy import linalg as LA
 import operator
 import random
 
+
 import dataset_network
-from utils import *
 from config.networks import default as cfg
+from utils.clustering import ACMin
 
 
 print(sklearn.__version__)
@@ -66,32 +67,40 @@ def solve_envs():
 
 def load_data(cfg):
     data_ = dataset_network.get_dataset(cfg)
-    features = data_.x
-    true_clusters = data_.y
-    graph = data_.graph
-    return graph, features, true_clusters
+    if cfg.dataset == 'icdm_test':
+        features = data_.x
+        graph = data_.graph
+        return graph, features
+    else:
+        features = data_.x
+        true_clusters = data_.y
+        graph = data_.graph
+        return graph, features, true_clusters
 def obtain_cluster_results(cfg):
-    graph, feats, true_clusters = load_data(cfg)
+    if cfg.dataset == 'icdm_test':
+        graph, feats = load_data(cfg)
+    else:
+        graph, feats, true_clusters = load_data(cfg)
     if cfg.num_cluster:
         num_cluster = cfg.num_cluster
     else:
         num_cluster = len(np.unique(true_clusters))
     if cfg.mode == 'cluster':
         predict_clusters = cluster(graph, feats, num_cluster, **cfg.cluster_params)
-        cm = clustering_metrics(true_clusters, predict_clusters)
-        print("acc: %f\t nmi: %f\t adjscore: %f\t ari:%f"%cm.evaluationClusterModelFromLabel())
-        print("-------------------------------")
         K = len(set(predict_clusters))
+        print("-------------------------------")
         file_path = os.path.join(cfg.cluster_result_path, "sc."+cfg.dataset+"."+str(K)+".cluster.txt")
         with open(file_path, "w") as fout:
             for i in range(len(predict_clusters)):
                 fout.write(str(predict_clusters[i])+"\n")
+        print("---------------finish saving----------------")
+        if cfg.dataset != 'icdm_test':
+            cm = clustering_metrics(true_clusters, predict_clusters)
+            print("acc: %f\t nmi: %f\t adjscore: %f\t ari:%f"%cm.evaluationClusterModelFromLabel())
     # elif cfg.mode == 'eval_metrics':
-
     #     file_path = os.path.join(cfg.cluster_result_path, "sc."+cfg.dataset+"."+str(K)+".cluster.txt")
-
 
 if __name__ == '__main__':
     cfg = solve_envs()
-    obtain_cluster_results(cfg)
+    ACMin(cfg)
 
