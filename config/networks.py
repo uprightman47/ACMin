@@ -13,6 +13,7 @@ class Default(Config):
 
     data_total_path = 'data'
     cluster_result_path = 'results'
+    feature_form = 'representations'
     # ---------------------------------------------------------------------------- #
     # trainning
     # ---------------------------------------------------------------------------- #

@@ -88,12 +88,18 @@ class ogbn_magDataset(NetworkDataset):
 class icdmDataset(NetworkDataset):
     def __init__(self, config):
         super(icdmDataset, self).__init__(config)
+        self.feature_form = config.feature_form
         self.dataset_name = 'icdm2023_session1_test'
         self.dataset_path = os.path.join(self.data_total_path, self.dataset_name)
         self.read_raw()
     def read_raw(self):
         #obtain X
-        feat_df_path = os.path.join(self.dataset_path, 'icdm2023_session1_test_node_feat.txt')
+        if self.feature_form == 'origins':
+            feat_df_path = os.path.join(self.dataset_path, 'icdm2023_session1_test_node_feat.txt')
+        elif self.feature_form == 'representations':
+            feat_df_path = os.path.join(self.dataset_path, 'node_features_original_order.txt')
+        else:
+            raise NotImplementedError('Not support feature form')
         feat_df = pd.read_csv(feat_df_path, sep=',', header=None)
         self.num_features = feat_df.shape[1]
         feat_df = feat_df.to_numpy()
@@ -114,4 +120,4 @@ class icdmDataset(NetworkDataset):
         edges_df_path = os.path.join(self.dataset_path, 'icdm2023_session1_test_edge.txt')
         edges_df = pd.read_csv(edges_df_path, header=None)
         edges_df = edges_df.T.to_numpy()
-        return torch.tensor(self.x, dtype = torch.float), torch.tensor(edges_df), torch.tensor(self.nodes)
+        return torch.tensor(self.x, dtype = torch.float), torch.tensor(edges_df), self.nodes

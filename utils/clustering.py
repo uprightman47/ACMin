@@ -30,13 +30,14 @@ class ACMin:
         self.config = config
         self.build()
         return
-    def ACMin_func(self):
+    def ACMin_func(self, features):
         config = self.config
         data_loader = self.data_loader
         num_batchs = len(data_loader)
         cluster_results_list = []
         node_list = []
         for i, batch in enumerate(data_loader):
+            batch.x = features[batch.node_order]
             edge_list = np.transpose(batch.edge_index.numpy())
             edge_list = [(edge_[0],edge_[1]) for edge_ in edge_list]
             G_graph = nx.Graph()
@@ -61,18 +62,19 @@ class ACMin:
         config = self.config
         if config.dataset == 'icdm_test':
             edge_index, features, node_index = self.load_data()
-            network_data = Data(x=features, edge_index=edge_index, node_order=node_index)
+            network_data = Data(edge_index=edge_index, node_order=node_index)
             cluster_data_save_dir = 'cluster_data/'
         else:
             edge_index, features, true_clusters, node_index = self.load_data()
-            network_data = Data(x=features, edge_index=edge_index, y=true_clusters, node_index = node_index)
+            network_data = Data(edge_index=edge_index, y=true_clusters, node_index = node_index)
             cluster_data_save_dir = f'{config.data_total_path}/{config.dataset}/processed/'
             if not os.path.exists(cluster_data_save_dir):
                 os.makedirs(cluster_data_save_dir)
+        print('finished')
         cluster_data = ClusterData(network_data, num_parts=config.cluster_parts_num, recursive=False, save_dir=cluster_data_save_dir)
         self.data_loader = ClusterLoader(cluster_data, batch_size=config.batch_size, shuffle=True, num_workers=16)
         if config.mode == 'cluster':
-            predict_clusters, node_list = self.ACMin_func()
+            predict_clusters, node_list = self.ACMin_func(features)
             sorted_data = sorted(zip(node_list, predict_clusters))
             node_list, predict_clusters = zip(*sorted_data)
             K = len(np.unique(predict_clusters)) if config.dataset != 'icdm_test' else config.num_cluster
